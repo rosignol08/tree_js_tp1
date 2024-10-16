@@ -144,7 +144,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);//todo
 camera.position.z = 5;
 
-const controls = new OrbitControls(camera, renderer.domElement);
+//const controls = new OrbitControls(camera, renderer.domElement);
 //les lumières etc
 //let hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
 //hemiLight.position.set(0, 0, 0);
@@ -405,6 +405,7 @@ let nombre_arbres = 10;
 spawn_arbres(arbres,model_arbre,nombre_arbres,scene);
 camera.rotation.x = -0.3;
 camera.rotation.y = 0.4;
+camera.rotation.z = 0.1;
 camera.position.z = 3;
 camera.position.x = 1.5;
 //camera.rotation.z = 0.3;
@@ -422,7 +423,7 @@ function animate(timestamp) {
     scene.add(sol);
   }
   for (let i = 0; i < nombre_arbres; i++) {
-    arbres[i].position.z -=  0.01;
+    arbres[i].position.z -=  0.005;
     if (arbres[i].position.z < -7) {
       respawn_arbre(arbres[i]);
     }
@@ -439,7 +440,7 @@ function animate(timestamp) {
   //checkCollisions(cubes, sol);
   //dirLight.position.z -=1;
   renderer.render(scene, camera);
-  controls.update();
+  //controls.update();
   requestAnimationFrame(animate);
 }
 animate();
