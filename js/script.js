@@ -90,18 +90,6 @@ function cree_cube(x, y, z, w, h, d, color){
   return cube;
 }
 
-function cree_cube_transparant(x, y, z, w, h, d, color,flag){
-    let geometry = new THREE.BoxGeometry(w, h, d);
-    let material = new THREE.MeshBasicMaterial({ color: color });
-    if (flag === 1) {
-      material.transparent = true;
-      material.opacity = 0.5;
-    }
-    let cube = new THREE.Mesh(geometry, material);
-    cube.position.set(x, y, z);
-    return cube;
-}
-
 
 function cree_cube_texture(x, y, z, w, h, d, material){
     let geometry = new THREE.BoxGeometry(w, h, d);
@@ -153,7 +141,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true; // Activer les ombres
 //création de la scène et la caméra
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);//todo
 camera.position.z = 5;
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -162,7 +150,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 //hemiLight.position.set(0, 0, 0);
 //scene.add(hemiLight);
 
-//spotlight
+//spotlight (pas super utile mais stylé)
 let spotLight = new THREE.SpotLight(0xffff99,2);
 spotLight.position.set(0, 1, 0);
 spotLight.castShadow = true;
@@ -173,6 +161,13 @@ spotLight.shadow.camera.far = 100;
 spotLight.rotation.z = 0.5;
 spotLight.position.set(3, 4, 2);
 scene.add(spotLight);
+
+
+//brouillard todo
+let color = 0xbdbcbe;  // white
+let near = 3;
+let far = 10;
+scene.fog = new THREE.Fog(color, near, far);
 
 //lumière directionnelle
 let dirLight = new THREE.DirectionalLight(0xffffff,0.5);
@@ -236,6 +231,22 @@ function getRandomPosition(minX, maxX, minY, maxY, minZ, maxZ) {
   };
 }
 
+//la meme que la fonction précédente mais avec les coordonnées à exclure
+function getRandomPosition_sauf(minX, maxX, minY, maxY, minZ, maxZ, excludeMinX, excludeMaxX, excludeMinY, excludeMaxY, excludeMinZ, excludeMaxZ) {
+  let x, y, z;
+  do {
+      x = Math.random() * (maxX - minX) + minX;
+      y = Math.random() * (maxY - minY) + minY;
+      z = Math.random() * (maxZ - minZ) + minZ;
+  } while (
+      (x >= excludeMinX && x <= excludeMaxX) || // Exclusion indépendante pour X
+      (z >= excludeMinZ && z <= excludeMaxZ)    // Exclusion indépendante pour Z
+  );
+  return { x, y, z };
+}
+
+
+
 let randomPosition = getRandomPosition(-1, 1, 0, 1, -1, 1);
 console.log(randomPosition.x, randomPosition.y, randomPosition.z);
 
@@ -243,7 +254,7 @@ console.log(randomPosition.x, randomPosition.y, randomPosition.z);
 cree_collision_box(sol);
 //let sphere = cree_sphere(0, 0, 0, 1, 0x0000ff);
 //cree_collision_sphere(sphere);
-let sphere_dome = cree_sphere_texture(0, 0, 0, 10, new THREE.TextureLoader().load('./js/assets/8k_stars.jpg'),1);
+let sphere_dome = cree_sphere(0, 0, 0, 10, 0xffffff, 1);
 //let sphere_dome = cree_sphere(0, 0, 0, 5,0xffffff,0);
 scene.add(sphere_dome);
 
@@ -282,7 +293,7 @@ function rebondir(obj, normal) {
   //plus 
   obj.velocity.multiplyScalar(0.3);
 
-  // Make the object jump a bit higher after a bounce
+  //saut unpeu
   obj.position.y = sol.position.y + sol.geometry.parameters.height / 2 + obj.geometry.parameters.height / 2 + 0.03;
 }
 
@@ -310,6 +321,38 @@ function rebondir(obj, normal) {
   scene.add(model);
 //fin chargement renard
 
+//pour les arbres
+function spawn_arbres(arbres, model_arbre, nb_arbres, scene) {
+  //pour les coordonnées des arbres
+  let minX = -7;
+  let maxX = 7;
+  let minZ = -7;
+  let maxZ = 7;
+  let excludeMinX = -1.5;
+  let excludeMaxX = 1.5;
+  let excludeMinZ = -1.5;
+  let excludeMaxZ = 1.5;
+
+  for (let i = 0; i < nb_arbres; i++) {
+    let randomPosition_arbre = getRandomPosition_sauf(minX, maxX, 0, 0, minZ, maxZ, excludeMinX, excludeMaxX, 0, 0, excludeMinZ, excludeMaxZ);
+    
+    //je clone le modèle d'arbre avant de modifier sa position et l'ajouter à la scène psk sinon c'est le même objet qui est ajouté
+    let arbre_clone = model_arbre.clone();
+    
+    arbre_clone.position.set(randomPosition_arbre.x, -1, randomPosition_arbre.z);
+    
+    arbres.push(arbre_clone);
+    scene.add(arbre_clone);
+    //console.log(randomPosition_arbre.x, randomPosition_arbre.z);
+  }
+  return arbres;
+}
+
+function respawn_arbre(arbre) {
+  let randomPosition_arbre = getRandomPosition_sauf(-7, 7, 0, 0, 2, 7, -1.5, 1.5, 0, 0, -1.5, 1.5);
+  arbre.position.set(randomPosition_arbre.x, -1, randomPosition_arbre.z);
+}
+
 function remonte(obj) {
   randomPosition = getRandomPosition(-3, 3, min_bas, max_haut, -3, 3);
   obj.position.set(randomPosition.x, randomPosition.y, randomPosition.z);
@@ -319,7 +362,7 @@ function remonte(obj) {
 function cree_neige(nbCubes, scene) {
   let cubes = [];
   for (let i = 0; i < nbCubes; i++) {
-      let randomPosition = getRandomPosition(-3, 3, min_bas, max_haut, -3, 3);
+      let randomPosition = getRandomPosition(-2, 2, min_bas, max_haut, -2, 2);
       let cube = cree_cube(randomPosition.x, randomPosition.y, randomPosition.z, 0.01, 0.01, 0.01, 0xffffff);
       cube.velocity = new THREE.Vector3(0, -0.01, 0); // Initialisation de la vélocité
       cube.castShadow = true; // Projection d'ombres
@@ -338,21 +381,33 @@ function cree_neige_collision(liste_cube, nbCubes, scene) {
   return cubes_aabb;
 }
 
-function checkCollisions(cubes, sol) {
-  cubes.forEach((cube, index) => {
-      if (cube.collision(sol)) {
-          console.log(`Collision détectée avec cube ${index + 1}`);
-          cube.position.y = sol.position.y + sol.geometry.parameters.height / 2 + cube.geometry.parameters.height / 2;
-          remonte(cube);
-      }
-  });
-}
-
-const nombre_cubes = 1000;
-// Création et ajout de 6 cubes
+const nombre_cubes = 300;
+// Création et ajout de x cubes
 let cubes = cree_neige(nombre_cubes, scene);
 
-
+//creation arbres
+let model_arbre = undefined;
+let loader_arbre = new GLTFLoader();
+let data_arbre = await loader_arbre.loadAsync('./js/assets/low_poly_spruce_tree_01.glb');
+model_arbre = data_arbre.scene;
+//on active la projection d'ombres pour chaque sous-objet
+model_arbre.traverse(function(child) {
+  if (child.isMesh) {
+      child.castShadow = true;
+  }
+});
+model_arbre.scale.x = 0.3;
+model_arbre.scale.y = 0.3;
+model_arbre.scale.z = 0.3;
+//scene.add(model_arbre);
+let arbres = [];
+let nombre_arbres = 10;
+spawn_arbres(arbres,model_arbre,nombre_arbres,scene);
+camera.rotation.x = -0.3;
+camera.rotation.y = 0.4;
+camera.position.z = 3;
+camera.position.x = 1.5;
+//camera.rotation.z = 0.3;
 function animate(timestamp) {
   let aabbSol = cree_collision_box(sol);
   let aabb_cubes = cree_neige_collision(cubes,nombre_cubes, scene);
@@ -366,6 +421,14 @@ function animate(timestamp) {
   if (!scene.children.includes(sol)) {
     scene.add(sol);
   }
+  for (let i = 0; i < nombre_arbres; i++) {
+    arbres[i].position.z -=  0.01;
+    if (arbres[i].position.z < -7) {
+      respawn_arbre(arbres[i]);
+    }
+  }
+  //let test = getRandomPosition_sauf(-7, 7, 0, 0, -7, 7, -2, 2, 0, 0, -2, 2);
+  //console.log(test.x, test.y, test.z);
   mixer.update(1/200);//vitesse de l'animation du renard
    //textureLoader = new THREE.TextureLoader();
    diffuseTexture.offset.y -= 0.001;
