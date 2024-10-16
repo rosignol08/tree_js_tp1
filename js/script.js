@@ -161,7 +161,21 @@ const controls = new OrbitControls(camera, renderer.domElement);
 //let hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
 //hemiLight.position.set(0, 0, 0);
 //scene.add(hemiLight);
-let dirLight = new THREE.DirectionalLight(0xffffff,2);
+
+//spotlight
+let spotLight = new THREE.SpotLight(0xffff99,2);
+spotLight.position.set(0, 1, 0);
+spotLight.castShadow = true;
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+spotLight.shadow.camera.near = 0.5;
+spotLight.shadow.camera.far = 100;
+spotLight.rotation.z = 0.5;
+spotLight.position.set(3, 4, 2);
+scene.add(spotLight);
+
+//lumière directionnelle
+let dirLight = new THREE.DirectionalLight(0xffffff,0.5);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 1024;
 dirLight.shadow.mapSize.height = 1024;
@@ -229,7 +243,7 @@ console.log(randomPosition.x, randomPosition.y, randomPosition.z);
 cree_collision_box(sol);
 //let sphere = cree_sphere(0, 0, 0, 1, 0x0000ff);
 //cree_collision_sphere(sphere);
-let sphere_dome = cree_sphere_texture(0, 0, 0, 10, new THREE.TextureLoader().load('./js/assets/snow_field_8k.jpg'),1);
+let sphere_dome = cree_sphere_texture(0, 0, 0, 10, new THREE.TextureLoader().load('./js/assets/8k_stars.jpg'),1);
 //let sphere_dome = cree_sphere(0, 0, 0, 5,0xffffff,0);
 scene.add(sphere_dome);
 
