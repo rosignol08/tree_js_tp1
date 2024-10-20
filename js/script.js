@@ -357,6 +357,7 @@ function remonte(obj) {
   randomPosition = getRandomPosition(-3, 3, min_bas, max_haut, -3, 3);
   obj.position.set(randomPosition.x, randomPosition.y, randomPosition.z);
   obj.velocity = new THREE.Vector3(0, -0.01, 0);
+  obj.material.color.set(0xffffff);//pour remettre la couleur blanche
 }
 
 function cree_neige(nbCubes, scene) {
@@ -380,6 +381,24 @@ function cree_neige_collision(liste_cube, nbCubes, scene) {
   }
   return cubes_aabb;
 }
+
+function assombrirCouleur(cube, intensite = 1) {
+  let couleur = cube.material.color;
+
+  // Calcul du facteur avec intensité amplifiée
+  // Si l'intensité est supérieure à 1, le changement de couleur sera plus rapide
+  let facteur = Math.min(Math.max(1 - Math.abs(cube.position.y) / (5 / intensite), 0), 1);
+
+  // Réduction de chaque composante en fonction du facteur
+  couleur.r = Math.max(facteur, 0);
+  couleur.g = Math.max(facteur, 0);
+  couleur.b = Math.max(facteur, 0);
+
+  // Mise à jour de la couleur du matériau
+  cube.material.color.setRGB(couleur.r, couleur.g, couleur.b);
+}
+
+
 
 const nombre_cubes = 300;
 // Création et ajout de x cubes
@@ -415,6 +434,7 @@ function animate(timestamp) {
   //met a jour la position des objets en fonction de leur velocite
   for (let i = 0; i < nombre_cubes; i++) {
     cubes[i].position.add(cubes[i].velocity);
+    assombrirCouleur(cubes[i], 4);
     if(aabb_cubes[i].collision(aabbSol)) {
       remonte(cubes[i]);
     }
