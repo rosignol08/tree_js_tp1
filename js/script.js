@@ -221,6 +221,7 @@ sol.rotation.x = 3.15;
 function getRandomCoordinate(min, max) {
   return Math.random() * (max - min) + min;
 }
+
 let min_bas = 1;
 let max_haut = 7;
 function getRandomPosition(minX, maxX, minY, maxY, minZ, maxZ) {
@@ -245,7 +246,17 @@ function getRandomPosition_sauf(minX, maxX, minY, maxY, minZ, maxZ, excludeMinX,
   return { x, y, z };
 }
 
-
+let meterial = new THREE.MeshStandardMaterial({
+  map: diffuseTexture,
+  normalMap: normalTexture,
+  aoMap: aoTexture,
+  roughnessMap: roughnessTexture,
+  metalnessMap: metalnessTexture,
+  roughness: 0.5,
+  metalness: 1.0,
+  clearcoat: 1.0
+});
+let nouvelle_sphere = cree_sphere_texture(0, 0, 0, 1, meterial, 0);
 
 let randomPosition = getRandomPosition(-1, 1, 0, 1, -1, 1);
 console.log(randomPosition.x, randomPosition.y, randomPosition.z);
@@ -458,7 +469,6 @@ function animate(timestamp) {
    roughnessTexture.offset.y -= 0.001;
    metalnessTexture.offset.y -= 0.001;
   //checkCollisions(cubes, sol);
-  //dirLight.position.z -=1;
   renderer.render(scene, camera);
   //controls.update();
   requestAnimationFrame(animate);
